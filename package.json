@@ -12,6 +12,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "@fast-csv/parse": "^5.0.2",
     "express": "^5.1.0"
   },
   "devDependencies": {
