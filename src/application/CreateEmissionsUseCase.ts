@@ -6,7 +6,7 @@ export class CreateEmissionsUseCase {
     private readonly emissionsRepository: EmissionsRepository,
   ) {}
 
-  public async execute(emissions: Emission[]): Promise<boolean> {
-    return await this.emissionsRepository.import(emissions);
+  public async execute(emissions: Emission[]): Promise<void> {
+    await this.emissionsRepository.import(emissions);
   }
 }

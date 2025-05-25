@@ -1,11 +1,12 @@
 import { Sector } from "../domain/Sector";
 import { SectorRepository } from "../application/ports/SectorRepository";
 import { PrismaClient } from "@prisma/client";
+import { RepositoryError } from "../domain/errors/RepositoryError";
 
 export class PrismaSectorRepository implements SectorRepository {
   public constructor(private readonly client: PrismaClient) {}
 
-  public async import(data: Sector[]): Promise<boolean> {
+  public async import(data: Sector[]): Promise<void> {
     try {
       const result = await this.client.sector.createMany({
         data: data.map((sector) => ({
@@ -17,13 +18,14 @@ export class PrismaSectorRepository implements SectorRepository {
       });
 
       if (result.count === 0) {
-        console.warn("No sectors were imported.");
-        return false;
+        throw new RepositoryError("No sectors were imported.");
       }
-      return true;
     } catch (error) {
-      console.error("Error importing emissions:", error);
-      return false;
+      if (error instanceof RepositoryError) {
+        throw error;
+      }
+      console.error("Error importing sectors:", error);
+      throw new RepositoryError("Failed to import sectors.");
     }
   }
 }

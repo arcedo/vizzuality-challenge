@@ -1,9 +1,12 @@
-import fs from "fs/promises";
+import fs from "fs";
+import fsPromis from "fs/promises";
 import { Request, Response } from "express";
 import { CreateEmissionsUseCase } from "../application/CreateEmissionsUseCase";
 import { CreateSectorsUseCase } from "../application/CreateSectorsUseCase";
 import { CsvImportService } from "../application/CsvImportService";
 import { CsvParseError } from "../domain/errors/CsvParseError";
+import { RepositoryError } from "../domain/errors/RepositoryError";
+import { ResponseBuilder } from "./responses/ResponseBuilder";
 
 export class CsvImportController {
   public constructor(
@@ -15,42 +18,45 @@ export class CsvImportController {
   public async handle(req: Request, res: Response): Promise<void> {
     const filePath = req.file?.path;
     if (!filePath) {
-      res.status(400).json({ error: "No file uploaded." });
+      res.status(400).json(ResponseBuilder.error("No file uploaded."));
       return;
     }
     try {
       const { sectors, emissions } =
         await this.csvImportService.import(filePath);
+      // TODO: maybe we should do a transaction here to ensure both sectors and emissions are created successfully
+      // if one fails, we should rollback the other :/
+      await this.createSectorsUseCase.execute(sectors);
 
-      if (!(await this.createSectorsUseCase.execute(sectors))) {
-        res.status(500).json({ error: "Failed to create sectors." });
-        return;
-      }
+      await this.createEmissionsUseCase.execute(emissions);
 
-      if (!(await this.createEmissionsUseCase.execute(emissions))) {
-        res.status(500).json({ error: "Failed to create emissions." });
-        return;
-      }
+      await fsPromis.unlink(filePath);
 
-      await fs.unlink(filePath);
-
-      res.status(200).json({
-        data: {
-          recordCount: {
-            sectors: sectors.length,
-            emissions: emissions.length,
-          },
-        },
-        message: "Data imported successfully.",
-      });
+      res.status(200).json(
+        ResponseBuilder.success({
+          message: "CSV import successful.",
+          sectorsCreated: sectors.length,
+          emissionsCreated: emissions.length,
+        }),
+      );
     } catch (error) {
-      await fs.unlink(filePath);
+      if (fs.existsSync(filePath)) {
+        await fsPromis.unlink(filePath);
+      }
       if (error instanceof CsvParseError) {
-        res.status(400).json({ error: error.message });
+        res.status(400).json(ResponseBuilder.csvParseError(error.message));
+        return;
+      } else if (error instanceof RepositoryError) {
+        res.status(500).json(ResponseBuilder.repositoryError(error.message));
         return;
       }
+
       console.error("Error during CSV import:", error);
-      res.status(500).json({ error: "Internal server error." });
+      res
+        .status(500)
+        .json(
+          ResponseBuilder.error("Internal server error during CSV import."),
+        );
     }
   }
 }

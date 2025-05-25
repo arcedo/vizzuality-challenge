@@ -3,6 +3,7 @@ import { upload } from "../infrastructure/middleware/upload";
 import { CsvImportController } from "./CsvImportController";
 import { Request, Response, NextFunction } from "express";
 import { CsvParseError } from "../domain/errors/CsvParseError";
+import { ResponseBuilder } from "./responses/ResponseBuilder";
 
 export class Server {
   public static async run(
@@ -34,11 +35,11 @@ export class Server {
     next: NextFunction,
   ): void {
     if (err instanceof CsvParseError) {
-      res.status(400).json({ error: err.message });
+      res.status(400).json(ResponseBuilder.error(err.message));
       return;
     }
 
     console.error(err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json(ResponseBuilder.error("Internal server error."));
   }
 }
