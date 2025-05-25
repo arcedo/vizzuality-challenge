@@ -3,14 +3,14 @@ import { Emission } from "../domain/Emission";
 import { CreateEmissionsUseCase } from "./CreateEmissionsUseCase";
 import { CreateSectorsUseCase } from "./CreateSectorsUseCase";
 import { CsvParser } from "./ports/CsvParser";
+import { ValidationResult } from "../domain/shared/ValidationResult";
 import { randomUUID } from "crypto";
 
 export interface RawCsvRow {
-  country_code: string;
-  sector: string;
-  parent_sector: string | null;
-  year: number;
-  value: number;
+  Country: string;
+  Sector: string;
+  "Parent sector": string | null;
+  [year: string]: string | null;
 }
 
 export class CsvImportService {
@@ -20,35 +20,83 @@ export class CsvImportService {
     private readonly createEmissionsUseCase: CreateEmissionsUseCase,
   ) {}
 
+  public async import(
+    filePath: string,
+  ): Promise<{ sectors: Sector[]; emissions: Emission[] }> {
+    const rawRows = await this.csvParser.parse(filePath);
+    return this.extractData(rawRows);
+  }
+
   private extractData(rawRows: RawCsvRow[]): {
     sectors: Sector[];
     emissions: Emission[];
+    validationResult: ValidationResult;
   } {
+    if (rawRows.length === 0) {
+      return {
+        sectors: [],
+        emissions: [],
+        validationResult: ValidationResult.error("No data found in CSV file."),
+      };
+    }
+
     const sectors: Sector[] = [];
     const emissions: Emission[] = [];
+    const errors: string[] = [];
 
-    for (const row of rawRows) {
-      const id = randomUUID();
+    for (const [index, row] of rawRows.entries()) {
+      if (!row.Country || !row.Sector) {
+        errors.push(
+          `Row ${index + 1} missing required fields: ${JSON.stringify(row)}`,
+        );
+        continue;
+      }
+
       const sector = new Sector(
-        id,
-        row.sector,
-        row.country_code,
-        row.parent_sector,
+        randomUUID(),
+        row.Country,
+        row.Sector,
+        row["Parent sector"] ?? null,
       );
       sectors.push(sector);
 
-      const emission = new Emission(id, row.year, row.value);
-      emissions.push(emission);
+      const yearColumns = this.getYearColumns(row);
+      if (yearColumns.length === 0) {
+        errors.push(
+          `Row ${index + 1} has no valid year columns: ${JSON.stringify(row)}`,
+        );
+        continue;
+      }
+
+      for (const [year, value] of yearColumns) {
+        if (isNaN(value)) {
+          errors.push(
+            `Invalid value for year ${year} in row ${index + 1}: ${JSON.stringify(row)}`,
+          );
+          continue;
+        }
+        const emission = new Emission(sector.id, year, value);
+        emissions.push(emission);
+      }
     }
 
-    return { sectors, emissions };
+    return {
+      sectors,
+      emissions,
+      validationResult:
+        errors.length > 0
+          ? ValidationResult.fromErrors(errors)
+          : ValidationResult.success(),
+    };
   }
 
-  public async import(filePath: string): Promise<void> {
-    const rawRows = await this.csvParser.parse(filePath);
-    const { sectors, emissions } = this.extractData(rawRows);
-
-    await this.createSectorUseCase.execute(sectors);
-    await this.createEmissionsUseCase.execute(emissions);
+  private getYearColumns(row: RawCsvRow): [number, number][] {
+    return Object.entries(row)
+      .filter(([key]) => /^\d{4}$/.test(key))
+      .map(
+        ([year, value]) =>
+          [Number(year), parseFloat(value ?? "")] as [number, number],
+      )
+      .filter(([, value]) => !isNaN(value));
   }
 }
