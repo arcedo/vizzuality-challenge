@@ -14,7 +14,6 @@ export class PrismaSectorRepository implements SectorRepository {
           country: sector.country,
           parentSector: sector.parentSector,
         })),
-        skipDuplicates: true,
       });
 
       if (result.count === 0) {

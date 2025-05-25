@@ -13,7 +13,6 @@ export class PrismaEmissionRepository implements EmissionsRepository {
           year: emission.year,
           value: emission.value,
         })),
-        skipDuplicates: true,
       });
 
       if (result.count === 0) {

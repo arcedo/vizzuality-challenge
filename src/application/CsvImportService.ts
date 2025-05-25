@@ -14,15 +14,13 @@ export interface RawCsvRow {
 }
 
 export class CsvImportService {
-  public constructor(
-    private readonly csvParser: CsvParser<RawCsvRow>,
-    private readonly createSectorUseCase: CreateSectorsUseCase,
-    private readonly createEmissionsUseCase: CreateEmissionsUseCase,
-  ) {}
+  public constructor(private readonly csvParser: CsvParser<RawCsvRow>) {}
 
-  public async import(
-    filePath: string,
-  ): Promise<{ sectors: Sector[]; emissions: Emission[] }> {
+  public async import(filePath: string): Promise<{
+    sectors: Sector[];
+    emissions: Emission[];
+    validationResult: ValidationResult;
+  }> {
     const rawRows = await this.csvParser.parse(filePath);
     return this.extractData(rawRows);
   }
