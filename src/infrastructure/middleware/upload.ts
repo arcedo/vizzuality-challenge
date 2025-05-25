@@ -1,6 +1,7 @@
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { CsvParseError } from "../../domain/errors/CsvParseError";
 
 const uploadDir = "uploads/";
 if (!fs.existsSync(uploadDir)) {
@@ -30,6 +31,6 @@ export const upload = multer({
       return cb(null, true);
     }
 
-    cb(new Error("Only CSV files are allowed."));
+    cb(new CsvParseError("Only CSV files are allowed."));
   },
 });

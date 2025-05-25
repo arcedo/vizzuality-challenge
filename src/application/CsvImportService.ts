@@ -1,9 +1,7 @@
 import { Sector } from "../domain/Sector";
 import { Emission } from "../domain/Emission";
-import { CreateEmissionsUseCase } from "./CreateEmissionsUseCase";
-import { CreateSectorsUseCase } from "./CreateSectorsUseCase";
 import { CsvParser } from "./ports/CsvParser";
-import { ValidationResult } from "../domain/shared/ValidationResult";
+import { CsvParseError } from "../domain/errors/CsvParseError";
 import { randomUUID } from "crypto";
 
 export interface RawCsvRow {
@@ -19,33 +17,27 @@ export class CsvImportService {
   public async import(filePath: string): Promise<{
     sectors: Sector[];
     emissions: Emission[];
-    validationResult: ValidationResult;
   }> {
     const rawRows = await this.csvParser.parse(filePath);
+
+    if (rawRows.length === 0) {
+      throw new CsvParseError("CSV file is empty.");
+    }
+
     return this.extractData(rawRows);
   }
 
   private extractData(rawRows: RawCsvRow[]): {
     sectors: Sector[];
     emissions: Emission[];
-    validationResult: ValidationResult;
   } {
-    if (rawRows.length === 0) {
-      return {
-        sectors: [],
-        emissions: [],
-        validationResult: ValidationResult.error("No data found in CSV file."),
-      };
-    }
-
     const sectors: Sector[] = [];
     const emissions: Emission[] = [];
-    const errors: string[] = [];
 
     for (const [index, row] of rawRows.entries()) {
       if (!row.Country || !row.Sector) {
-        errors.push(
-          `Row ${index + 1} missing required fields: ${JSON.stringify(row)}`,
+        throw new CsvParseError(
+          `Row ${index + 1} is missing required fields: Country or Sector.`,
         );
         continue;
       }
@@ -60,20 +52,24 @@ export class CsvImportService {
 
       const yearColumns = this.getYearColumns(row);
       if (yearColumns.length === 0) {
-        errors.push(
-          `Row ${index + 1} has no valid year columns: ${JSON.stringify(row)}`,
-        );
+        throw new CsvParseError(`Row ${index + 1} has no valid year columns.`);
         continue;
       }
 
       for (const [year, value] of yearColumns) {
-        if (isNaN(value)) {
-          errors.push(
-            `Invalid value for year ${year} in row ${index + 1}: ${JSON.stringify(row)}`,
+        const parsedValue = parseFloat(value ?? "");
+        const parsedYear = Number(year);
+        if (isNaN(parsedYear)) {
+          throw new CsvParseError(
+            `Invalid year ${year} for ${row.Country} ${row.Sector}, must be number.`,
           );
-          continue;
         }
-        const emission = new Emission(sector.id, year, value);
+        if (isNaN(parsedValue)) {
+          throw new CsvParseError(
+            `Invalid value ${value} for year ${year} in row ${index + 1}, must be a number.`,
+          );
+        }
+        const emission = new Emission(sector.id, parsedYear, parsedValue);
         emissions.push(emission);
       }
     }
@@ -81,20 +77,13 @@ export class CsvImportService {
     return {
       sectors,
       emissions,
-      validationResult:
-        errors.length > 0
-          ? ValidationResult.fromErrors(errors)
-          : ValidationResult.success(),
     };
   }
 
-  private getYearColumns(row: RawCsvRow): [number, number][] {
+  private getYearColumns(row: RawCsvRow): [string, string][] {
+    const excludedKeys = new Set(["Country", "Sector", "Parent sector"]);
     return Object.entries(row)
-      .filter(([key]) => /^\d{4}$/.test(key))
-      .map(
-        ([year, value]) =>
-          [Number(year), parseFloat(value ?? "")] as [number, number],
-      )
-      .filter(([, value]) => !isNaN(value));
+      .filter(([key]) => !excludedKeys.has(key))
+      .map(([year, value]) => [year, value ?? ""] as [string, string]);
   }
 }

@@ -2,6 +2,7 @@ import express from "express";
 import { upload } from "../infrastructure/middleware/upload";
 import { CsvImportController } from "./CsvImportController";
 import { Request, Response, NextFunction } from "express";
+import { CsvParseError } from "../domain/errors/CsvParseError";
 
 export class Server {
   public static async run(
@@ -32,12 +33,12 @@ export class Server {
     res: Response,
     next: NextFunction,
   ): void {
-    if (err.message) {
+    if (err instanceof CsvParseError) {
       res.status(400).json({ error: err.message });
       return;
     }
 
-    console.error(err); // Log unhandled errors
+    console.error(err);
     res.status(500).json({ error: "Internal server error" });
   }
 }

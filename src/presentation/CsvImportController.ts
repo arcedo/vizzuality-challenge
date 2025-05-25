@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { CreateEmissionsUseCase } from "../application/CreateEmissionsUseCase";
 import { CreateSectorsUseCase } from "../application/CreateSectorsUseCase";
 import { CsvImportService } from "../application/CsvImportService";
+import { CsvParseError } from "../domain/errors/CsvParseError";
 
 export class CsvImportController {
   public constructor(
@@ -12,20 +13,14 @@ export class CsvImportController {
   ) {}
 
   public async handle(req: Request, res: Response): Promise<void> {
+    const filePath = req.file?.path;
+    if (!filePath) {
+      res.status(400).json({ error: "No file uploaded." });
+      return;
+    }
     try {
-      const filePath = req.file?.path;
-      if (!filePath) {
-        res.status(400).json({ error: "No file uploaded." });
-        return;
-      }
-
-      const { sectors, emissions, validationResult } =
+      const { sectors, emissions } =
         await this.csvImportService.import(filePath);
-
-      if (!validationResult.isValid) {
-        res.status(400).json({ error: validationResult.errors });
-        return;
-      }
 
       if (!(await this.createSectorsUseCase.execute(sectors))) {
         res.status(500).json({ error: "Failed to create sectors." });
@@ -49,6 +44,11 @@ export class CsvImportController {
         message: "Data imported successfully.",
       });
     } catch (error) {
+      await fs.unlink(filePath);
+      if (error instanceof CsvParseError) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
       console.error("Error during CSV import:", error);
       res.status(500).json({ error: "Internal server error." });
     }
