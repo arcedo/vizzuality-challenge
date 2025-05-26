@@ -4,11 +4,13 @@ import { CsvImportController } from "./CsvImportController";
 import { Request, Response, NextFunction } from "express";
 import { CsvParseError } from "../domain/errors/CsvParseError";
 import { ResponseBuilder } from "./responses/ResponseBuilder";
+import { DeleteAllController } from "./DeleteAllController";
 
 export class Server {
   public static async run(
     port: number,
     importController: CsvImportController,
+    deleteController: DeleteAllController,
   ): Promise<void> {
     const app = express();
     app.use(express.json());
@@ -17,6 +19,10 @@ export class Server {
 
     router.post("/import", upload.single("file"), (req, res) =>
       importController.handle(req, res),
+    );
+
+    router.delete("/delete-all", (req, res) =>
+      deleteController.handle(req, res),
     );
 
     app.use("/api", router);
