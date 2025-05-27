@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  test-csv-import-ms:
     runs-on: ubuntu-latest
 
     strategy:
@@ -20,9 +20,12 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Set up test database with Prisma
-        run: npx prisma db push
+
+      - name: Change to csv-import-ms directory
+        working-directory: ./csv-import-ms
+        run: |
+          npm install
+          npx prisma db push
+          npm test
         env:
           DATABASE_URL: "file:./data/test.db"
-      - run: npm install
-      - run: npm test
