@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   testMatch: [
     "**/tests/**/*.test.ts",
     "**/__tests__/**/*.test.ts",

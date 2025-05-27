@@ -22,5 +22,6 @@ export default defineConfig([
     rules: {
       ...tseslint.configs.recommended.rules,
     },
+    ignores: ["jest.config.cjs"],
   },
 ]);
