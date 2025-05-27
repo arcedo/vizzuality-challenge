@@ -9,8 +9,10 @@ export class GetStatsUseCase {
   ) {}
 
   public async execute(): Promise<ImportStats> {
-    const sectorStats = await this.sectorRepository.getImportedStats();
-    const emissionStats = await this.emissionRepository.getImportedStats();
+    const [sectorStats, emissionStats] = await Promise.all([
+      this.sectorRepository.getImportedStats(),
+      this.emissionRepository.getImportedStats(),
+    ]);
 
     return new ImportStats(sectorStats, emissionStats);
   }

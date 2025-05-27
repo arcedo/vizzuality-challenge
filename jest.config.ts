@@ -5,7 +5,11 @@ const config: Config = {
   coverageProvider: "v8",
   testEnvironment: "node",
   rootDir: "./",
-  testMatch: ["**/__tests__/**/*.test.ts", "**/*.spec.ts"],
+  testMatch: [
+    "**/__tests__/**/*.test.ts",
+    "**/*.spec.ts",
+    "**/test/**/*.test.ts",
+  ],
   collectCoverage: true,
   collectCoverageFrom: ["src/**/*.{ts,tsx}", "!src/**/*.d.ts"],
   coverageDirectory: "coverage",

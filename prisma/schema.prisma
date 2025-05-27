@@ -16,6 +16,10 @@ model Sector {
   parentSector String?
   country      String
   Emission     Emission[]
+
+  @@index([country])
+  @@index([name])
+  @@index([parentSector])
 }
 
 model Emission {
@@ -24,4 +28,7 @@ model Emission {
   idSector String
   year     Int
   value    Float
+
+  @@index([idSector])
+  @@index([year])
 }
