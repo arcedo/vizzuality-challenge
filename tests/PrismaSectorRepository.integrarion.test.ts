@@ -14,10 +14,12 @@ describe("PrismaSectorRepository Integration", () => {
   });
 
   beforeEach(async () => {
+    await prisma.emission.deleteMany();
     await prisma.sector.deleteMany();
   });
 
   afterAll(async () => {
+    await prisma.emission.deleteMany();
     await prisma.sector.deleteMany();
     await prisma.$disconnect();
   });
