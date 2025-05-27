@@ -10,22 +10,38 @@ jobs:
   test-csv-import-ms:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     strategy:
       matrix:
         node-version: [18.x]
 
     steps:
       - uses: actions/checkout@v3
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Change to csv-import-ms directory
+      - name: Install dependencies and run tests
         working-directory: ./csv-import-ms
         run: |
           npm install
           npx prisma db push
           npm test
         env:
-          DATABASE_URL: "file:./data/test.db"
+          DATABASE_URL: "postgresql://testuser:testpass@localhost:5432/testdb"

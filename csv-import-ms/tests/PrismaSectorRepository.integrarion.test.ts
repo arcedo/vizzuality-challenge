@@ -10,6 +10,7 @@ describe("PrismaSectorRepository Integration", () => {
     prisma = new PrismaClient();
     await prisma.$connect();
     repository = new PrismaSectorRepository(prisma);
+
     await prisma.emission.deleteMany();
     await prisma.sector.deleteMany();
   });
@@ -20,8 +21,10 @@ describe("PrismaSectorRepository Integration", () => {
   });
 
   afterAll(async () => {
-    await prisma.emission.deleteMany();
-    await prisma.sector.deleteMany();
+    await prisma.$transaction([
+      prisma.emission.deleteMany(),
+      prisma.sector.deleteMany(),
+    ]);
     await prisma.$disconnect();
   });
 
@@ -38,9 +41,14 @@ describe("PrismaSectorRepository Integration", () => {
     await repository.import(sectors);
 
     const stored = await prisma.sector.findMany();
-    expect(stored).toHaveLength(1);
-    expect(stored[0].name).toBe("Energy");
-    expect(stored[0].country).toBe("ESP");
+    expect(stored[0]).toEqual(
+      expect.objectContaining({
+        id: "mock-sector-id",
+        name: "Energy",
+        country: "ESP",
+        parentSector: null,
+      }),
+    );
   });
 
   it("should delete all sectors", async () => {

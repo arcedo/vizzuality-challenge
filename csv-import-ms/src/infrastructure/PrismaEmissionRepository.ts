@@ -49,6 +49,9 @@ export class PrismaEmissionRepository implements EmissionsRepository {
         result._count.id ?? 0,
       );
     } catch (error) {
+      if (error instanceof RepositoryError) {
+        throw error;
+      }
       console.error("Error fetching stats:", error);
       throw new RepositoryError("Failed to fetch import stats.");
     }
@@ -62,6 +65,9 @@ export class PrismaEmissionRepository implements EmissionsRepository {
       }
       return result.count;
     } catch (error) {
+      if (error instanceof RepositoryError) {
+        throw error;
+      }
       console.error("Error deleting all emissions:", error);
       throw new RepositoryError("Failed to delete all emissions.");
     }

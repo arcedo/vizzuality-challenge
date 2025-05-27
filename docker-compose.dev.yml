@@ -1,0 +1,30 @@
+services:
+  app:
+    build:
+      context: ./csv-import-ms
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./csv-import-ms:/app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}"
+    command: sh -c "
+      until npx prisma migrate deploy; do echo 'Waiting for DB...'; sleep 2; done &&
+      npm run dev"
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

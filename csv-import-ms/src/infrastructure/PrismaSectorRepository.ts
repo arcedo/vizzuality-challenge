@@ -44,6 +44,9 @@ export class PrismaSectorRepository implements SectorRepository {
 
       return new SectorStats(countryGroups.length, overallCount._count.name);
     } catch (error) {
+      if (error instanceof RepositoryError) {
+        throw error;
+      }
       console.error("Error fetching import stats:", error);
       throw new RepositoryError("Failed to fetch import stats.");
     }
@@ -57,6 +60,9 @@ export class PrismaSectorRepository implements SectorRepository {
       }
       return result.count;
     } catch (error) {
+      if (error instanceof RepositoryError) {
+        throw error;
+      }
       console.error("Error deleting all sectors:", error);
       throw new RepositoryError("Failed to delete all sectors.");
     }

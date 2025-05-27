@@ -5,7 +5,7 @@
   "author": "M. Arcedo",
   "license": "ISC",
   "scripts": {
-    "test": "DATABASE_URL='file:./data/test.db' jest",
+    "test": "jest --runInBand",
     "dev": "ts-node-dev --respawn src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
@@ -24,6 +24,7 @@
     "@types/multer": "^1.4.12",
     "@types/node": "^22.15.21",
     "@types/supertest": "^6.0.3",
+    "dotenv": "^16.5.0",
     "eslint": "^9.27.0",
     "globals": "^16.1.0",
     "jest": "^29.7.0",

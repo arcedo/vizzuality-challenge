@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { DeleteAllUseCase } from "../application/DeleteAllUseCase";
 import { ResponseBuilder } from "./responses/ResponseBuilder";
+import { RepositoryError } from "../domain/errors/RepositoryError";
 
 export class DeleteAllController {
   public constructor(private readonly deleteAllUseCase: DeleteAllUseCase) {}
@@ -15,6 +16,10 @@ export class DeleteAllController {
         }),
       );
     } catch (error) {
+      if (error instanceof RepositoryError) {
+        res.status(400).json(ResponseBuilder.error(error.message));
+        return;
+      }
       console.error("Error during delete all operation:", error);
       res
         .status(500)
