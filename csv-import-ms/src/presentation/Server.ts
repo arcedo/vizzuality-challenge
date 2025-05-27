@@ -1,4 +1,5 @@
 import express from "express";
+import rateLimit from "express-rate-limit";
 import { upload } from "../infrastructure/middleware/upload";
 import { CsvImportController } from "./CsvImportController";
 import { Request, Response, NextFunction } from "express";
@@ -15,9 +16,24 @@ export class Server {
     const app = express();
     app.use(express.json());
 
+    const limiter = rateLimit({
+      windowMs: 5 * 60 * 1000,
+      max: 100,
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
+    app.use(limiter);
+
+    const importLimiter = rateLimit({
+      windowMs: 5 * 60 * 1000,
+      max: 5,
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
+
     const router = express.Router();
 
-    router.post("/import", upload.single("file"), (req, res) =>
+    router.post("/import", importLimiter, upload.single("file"), (req, res) =>
       importController.handle(req, res),
     );
 
