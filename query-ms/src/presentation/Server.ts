@@ -2,12 +2,15 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import { Request, Response, NextFunction } from "express";
 import { GetEmissionsController } from "./GetEmissionsController";
+import { GetStatusController } from "./GetStatusController";
 import { parseQueryOperators } from "../infrastructure/middleware/queryParser";
+import { report } from "process";
 
 export class Server {
   public static async run(
     port: number,
     getEmissionsController: GetEmissionsController,
+    getStatusController: GetStatusController,
   ): Promise<void> {
     const app = express();
     app.use(express.json());
@@ -28,6 +31,10 @@ export class Server {
       parseQueryOperators,
       async (req: Request, res: Response) =>
         getEmissionsController.handle(req, res),
+    );
+
+    router.get("/status", async (req: Request, res: Response) =>
+      getStatusController.handle(req, res),
     );
 
     app.use("/api", router);
