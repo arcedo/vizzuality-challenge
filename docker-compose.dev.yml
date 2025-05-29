@@ -1,18 +1,37 @@
 services:
-  app:
+  csv-import-ms:
     build:
       context: ./csv-import-ms
       dockerfile: Dockerfile.dev
     volumes:
       - ./csv-import-ms:/app
     ports:
-      - "3000:3000"
+      - "${PORT_IMPORT}:${PORT_IMPORT}" # Updated to use env var
     depends_on:
       - db
     environment:
       DATABASE_URL: "postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}"
+      PORT: ${PORT_IMPORT}
     command: sh -c "
       until npx prisma migrate deploy; do echo 'Waiting for DB...'; sleep 2; done &&
+      npm run dev"
+
+  query-ms:
+    build:
+      context: ./query-ms
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./query-ms:/app
+    ports:
+      - "${PORT_QUERY}:${PORT_QUERY}" # Updated to use env var
+    depends_on:
+      - db
+      - csv-import-ms
+    environment:
+      DATABASE_URL: "postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}"
+      PORT: ${PORT_QUERY}
+    command: sh -c "
+      until npx prisma generate; do echo 'Waiting for DB...'; sleep 2; done &&
       npm run dev"
 
   db:
