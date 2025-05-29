@@ -10,10 +10,10 @@ import { PrismaSectorRepository } from "./infrastructure/PrismaSectorRepository"
 import { PrismaEmissionRepository } from "./infrastructure/PrismaEmissionRepository";
 import { GetStatsUseCase } from "./application/GetStatsUseCase";
 import { PrismaClient } from "@prisma/client";
-
-const PORT = 3000;
+import "dotenv/config";
 
 export async function main(): Promise<void> {
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
   const client = new PrismaClient();
   const csvParser = new FastCsvParser<RawCsvRow>();
   const sectorRepository = new PrismaSectorRepository(client);
