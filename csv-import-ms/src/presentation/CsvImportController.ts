@@ -8,6 +8,7 @@ import { CsvParseError } from "../domain/errors/CsvParseError";
 import { RepositoryError } from "../domain/errors/RepositoryError";
 import { ResponseBuilder } from "./responses/ResponseBuilder";
 import { GetStatsUseCase } from "../application/GetStatsUseCase";
+import { performance } from "perf_hooks";
 
 export class CsvImportController {
   public constructor(
@@ -23,22 +24,38 @@ export class CsvImportController {
       res.status(400).json(ResponseBuilder.error("No file uploaded."));
       return;
     }
+    const startTime = performance.now();
     try {
       const { sectors, emissions } =
         await this.csvImportService.import(filePath);
+      const importDuration = ((performance.now() - startTime) / 1000).toFixed(
+        2,
+      );
       // TODO: maybe we should do a transaction here to ensure both sectors and emissions are created successfully
       // if one fails, we should rollback the other :/
+      const transactionStartTime = performance.now();
       await this.createSectorsUseCase.execute(sectors);
       await this.createEmissionsUseCase.execute(emissions);
+      const transactionDuration = (
+        (performance.now() - transactionStartTime) /
+        1000
+      ).toFixed(2);
 
       const stats = await this.getStatsUseCase.execute();
 
       await fsPromis.unlink(filePath);
 
+      const totalDuration = ((performance.now() - startTime) / 1000).toFixed(2);
+
       res.status(200).json(
         ResponseBuilder.success({
           message: "CSV import successful.",
           stats: stats,
+          performance: {
+            totalDuration: totalDuration + "s",
+            importDuration: importDuration + "s",
+            transactionDuration: transactionDuration + "s",
+          },
         }),
       );
     } catch (error) {
