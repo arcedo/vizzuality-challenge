@@ -6,11 +6,11 @@ services:
     volumes:
       - ./csv-import-ms:/app
     ports:
-      - "${PORT_IMPORT}:${PORT_IMPORT}" # Updated to use env var
+      - "${PORT_IMPORT}:${PORT_IMPORT}"
     depends_on:
       - db
     environment:
-      DATABASE_URL: "postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}"
+      DATABASE_URL: "postgres://${DEV_DB_USER}:${DEV_DB_PASSWORD}@db:5432/${DEV_DB_NAME}"
       PORT: ${PORT_IMPORT}
     command: sh -c "
       until npx prisma migrate deploy; do echo 'Waiting for DB...'; sleep 2; done &&
@@ -28,7 +28,7 @@ services:
       - db
       - csv-import-ms
     environment:
-      DATABASE_URL: "postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}"
+      DATABASE_URL: "postgres://${DEV_DB_USER}:${DEV_DB_PASSWORD}@db:5432/${DEV_DB_NAME}"
       PORT: ${PORT_QUERY}
     command: sh -c "
       until npx prisma generate; do echo 'Waiting for DB...'; sleep 2; done &&
@@ -37,9 +37,9 @@ services:
   db:
     image: postgres:16
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DEV_DB_USER}
+      POSTGRES_PASSWORD: ${DEV_DB_PASSWORD}
+      POSTGRES_DB: ${DEV_DB_NAME}
     ports:
       - "5432:5432"
     volumes:
