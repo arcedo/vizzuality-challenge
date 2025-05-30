@@ -1,3 +1,4 @@
+name: "dev-vizzuality-challenge"
 services:
   csv-import-ms:
     build:
@@ -43,7 +44,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - dev_postgres_data:/var/lib/postgresql/data
 
 volumes:
-  postgres_data:
+  dev_postgres_data:
