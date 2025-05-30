@@ -23,14 +23,8 @@ COPY prisma/ ./prisma/
 # Generate Prisma client
 RUN npx prisma generate
 
-# Debug: Check what files we have before build
-RUN echo "Files before build:" && ls -la src/
-
 # Build the TypeScript app
 RUN npm run build
-
-# Debug: Check what files we have after build
-RUN echo "Files after build:" && ls -la && echo "Dist contents:" && ls -la dist/
 
 # Remove devDependencies for smaller image (keep this for now during debugging)
 # RUN npm prune --production
