@@ -257,8 +257,8 @@ curl "http://localhost:3001/api/emissions?country=ABW&value[lte]=18.4&sortBy=val
 | Parameter | Type | Description | Example |
 |-----------|------|-------------|---------|
 | `year` | number | Filter by emission year | `?year=2023` |
-| `country` | string | Filter by country | `?country=USA` |
-| `sector` | string | Filter by sector name (case-insensitive) | `?sectorName=energy` |
+| `country` | string | Filter by country | `?country=ANY` |
+| `sector` | string | Filter by sector name (case-insensitive) | `?sector=energy` |
 | `sectorParent` | string\|null | Filter by parent sector | `?sectorParent=energy` |
 | `value[gte]` | number | Minimum emission value | `?value[gte]=100` |
 | `value[lte]` | number | Maximum emission value | `?value[lte]=500` |
