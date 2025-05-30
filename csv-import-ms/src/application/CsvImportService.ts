@@ -4,6 +4,7 @@ import { CsvParser } from "./ports/CsvParser";
 import { CsvParseError } from "../domain/errors/CsvParseError";
 import { randomUUID } from "crypto";
 
+// Raw structure of the csv parsed
 export interface RawCsvRow {
   Country: string;
   Sector: string;
@@ -53,7 +54,6 @@ export class CsvImportService {
       const yearColumns = this.getYearColumns(row);
       if (yearColumns.length === 0) {
         throw new CsvParseError(`Row ${index + 1} has no valid year columns.`);
-        continue;
       }
 
       for (const [year, value] of yearColumns) {
