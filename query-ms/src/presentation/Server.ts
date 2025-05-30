@@ -4,7 +4,6 @@ import { Request, Response, NextFunction } from "express";
 import { GetEmissionsController } from "./GetEmissionsController";
 import { GetStatusController } from "./GetStatusController";
 import { parseQueryOperators } from "../infrastructure/middleware/queryParser";
-import { report } from "process";
 
 export class Server {
   public static async run(
