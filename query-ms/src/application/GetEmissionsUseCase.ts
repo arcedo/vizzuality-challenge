@@ -13,8 +13,8 @@ export class GetEmissionsUseCase {
   ): Promise<GetEmissionsResponse> {
     this.validateGetEmissionsQuery(query);
 
-    const page = query.page || 1;
-    const pageSize = query.pageSize || 10;
+    const page = Number(query.page) || 1;
+    const pageSize = Number(query.pageSize) || 10;
 
     // Create the query with defaults for repository calls
     const queryWithDefaults = { ...query, page, pageSize };
