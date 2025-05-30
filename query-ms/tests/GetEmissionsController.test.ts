@@ -1,4 +1,3 @@
-// tests/GetEmissionsController.test.ts
 import { Request, Response } from "express";
 import { GetEmissionsController } from "../src/presentation/GetEmissionsController";
 import { GetEmissionsUseCase } from "../src/application/GetEmissionsUseCase";

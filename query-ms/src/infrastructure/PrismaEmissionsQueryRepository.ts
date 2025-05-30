@@ -76,13 +76,13 @@ export class PrismaEmissionQueryRepository implements EmissionsQueryRepository {
     if (query.value) {
       whereClause.value = {};
       if (query.value.gte !== undefined) {
-        whereClause.value.gte = Number(query.value.gte); // Convert to number
+        whereClause.value.gte = Number(query.value.gte);
       }
       if (query.value.lte !== undefined) {
-        whereClause.value.lte = Number(query.value.lte); // Convert to number
+        whereClause.value.lte = Number(query.value.lte);
       }
       if (query.value.eq !== undefined) {
-        whereClause.value = Number(query.value.eq); // For exact matches
+        whereClause.value = Number(query.value.eq);
       }
     }
 
