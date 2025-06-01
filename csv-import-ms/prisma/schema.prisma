@@ -32,3 +32,11 @@ model Emission {
   @@index([idSector])
   @@index([year])
 }
+
+model ImportLog {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  totalRows Int
+
+  @@index([createdAt])
+}

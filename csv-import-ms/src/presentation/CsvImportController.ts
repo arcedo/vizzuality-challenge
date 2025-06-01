@@ -8,6 +8,7 @@ import { CsvParseError } from "../domain/errors/CsvParseError";
 import { RepositoryError } from "../domain/errors/RepositoryError";
 import { ResponseBuilder } from "./responses/ResponseBuilder";
 import { GetStatsUseCase } from "../application/GetStatsUseCase";
+import { CreateImportLogUseCase } from "../application/CreateImportLogUseCase";
 import { performance } from "perf_hooks";
 
 export class CsvImportController {
@@ -16,6 +17,7 @@ export class CsvImportController {
     private readonly createSectorsUseCase: CreateSectorsUseCase,
     private readonly createEmissionsUseCase: CreateEmissionsUseCase,
     private readonly getStatsUseCase: GetStatsUseCase,
+    private readonly createImportLogUseCase: CreateImportLogUseCase,
   ) {}
 
   public async handle(req: Request, res: Response): Promise<void> {
@@ -46,6 +48,9 @@ export class CsvImportController {
       await fsPromis.unlink(filePath);
 
       const totalDuration = ((performance.now() - startTime) / 1000).toFixed(2);
+
+      // Log the import operation
+      await this.createImportLogUseCase.execute(emissions.length);
 
       res.status(200).json(
         ResponseBuilder.success({
