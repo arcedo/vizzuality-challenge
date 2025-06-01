@@ -1,6 +1,7 @@
 import { Sector } from "../src/domain/Sector";
 import { CreateSectorsUseCase } from "../src/application/CreateSectorsUseCase";
 import { SectorRepository } from "../src/application/ports/SectorRepository";
+import { jest } from "@jest/globals";
 
 describe("CreateSectorsUseCase", () => {
   let createSectorsUseCase: CreateSectorsUseCase;
@@ -12,7 +13,6 @@ describe("CreateSectorsUseCase", () => {
       getImportedStats: jest.fn(),
       deleteAll: jest.fn(),
     };
-
     createSectorsUseCase = new CreateSectorsUseCase(mockSectorRepo);
   });
 
@@ -34,7 +34,8 @@ describe("CreateSectorsUseCase", () => {
 
     await createSectorsUseCase.execute(data);
 
-    expect(mockSectorRepo.import).toHaveBeenCalledWith(data);
+    // Update expectation to include the transaction parameter
+    expect(mockSectorRepo.import).toHaveBeenCalledWith(data, undefined);
     expect(mockSectorRepo.import).toHaveBeenCalledTimes(1);
   });
 
@@ -43,7 +44,8 @@ describe("CreateSectorsUseCase", () => {
 
     await createSectorsUseCase.execute(data);
 
-    expect(mockSectorRepo.import).toHaveBeenCalledWith([]);
+    // Update expectation to include the transaction parameter
+    expect(mockSectorRepo.import).toHaveBeenCalledWith([], undefined);
   });
 
   it("should handle errors thrown by the repository's import method", async () => {
@@ -61,5 +63,21 @@ describe("CreateSectorsUseCase", () => {
     await expect(createSectorsUseCase.execute(data)).rejects.toThrow(
       "Import failed",
     );
+  });
+
+  it("should pass transaction when provided", async () => {
+    const data: Sector[] = [
+      {
+        id: "mock-sector-id",
+        name: "Mock Sector",
+        country: "Mock Country",
+        parentSector: null,
+      },
+    ];
+    const mockTransaction = {} as any; // Mock transaction object
+
+    await createSectorsUseCase.execute(data, mockTransaction);
+
+    expect(mockSectorRepo.import).toHaveBeenCalledWith(data, mockTransaction);
   });
 });

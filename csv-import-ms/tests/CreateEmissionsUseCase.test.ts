@@ -1,6 +1,7 @@
 import { Emission } from "../src/domain/Emission";
 import { CreateEmissionsUseCase } from "../src/application/CreateEmissionsUseCase";
 import { EmissionsRepository } from "../src/application/ports/EmissionsRepository";
+import { jest } from "@jest/globals";
 
 describe("CreateEmissionsUseCase", () => {
   let createEmissionsUseCase: CreateEmissionsUseCase;
@@ -12,7 +13,6 @@ describe("CreateEmissionsUseCase", () => {
       getImportedStats: jest.fn(),
       deleteAll: jest.fn(),
     };
-
     createEmissionsUseCase = new CreateEmissionsUseCase(mockEmissionRepo);
   });
 
@@ -24,7 +24,8 @@ describe("CreateEmissionsUseCase", () => {
 
     await createEmissionsUseCase.execute(data);
 
-    expect(mockEmissionRepo.import).toHaveBeenCalledWith(data);
+    // Update expectation to include the transaction parameter (undefined when no tx passed)
+    expect(mockEmissionRepo.import).toHaveBeenCalledWith(data, undefined);
     expect(mockEmissionRepo.import).toHaveBeenCalledTimes(1);
   });
 
@@ -33,7 +34,8 @@ describe("CreateEmissionsUseCase", () => {
 
     await createEmissionsUseCase.execute(data);
 
-    expect(mockEmissionRepo.import).toHaveBeenCalledWith([]);
+    // Update expectation to include the transaction parameter
+    expect(mockEmissionRepo.import).toHaveBeenCalledWith([], undefined);
   });
 
   it("should handle errors thrown by the repository's import method", async () => {
@@ -46,5 +48,16 @@ describe("CreateEmissionsUseCase", () => {
     await expect(createEmissionsUseCase.execute(data)).rejects.toThrow(
       "Import failed",
     );
+  });
+
+  it("should pass transaction when provided", async () => {
+    const data: Emission[] = [
+      { idSector: "mock-sector-id", value: 100, year: 2020 },
+    ];
+    const mockTransaction = {} as any; // Mock transaction object
+
+    await createEmissionsUseCase.execute(data, mockTransaction);
+
+    expect(mockEmissionRepo.import).toHaveBeenCalledWith(data, mockTransaction);
   });
 });
