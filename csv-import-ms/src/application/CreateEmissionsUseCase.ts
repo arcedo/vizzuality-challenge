@@ -1,4 +1,5 @@
 import { Emission } from "../domain/Emission";
+import { PrismaTransaction } from "../types/prisma";
 import { EmissionsRepository } from "./ports/EmissionsRepository";
 
 export class CreateEmissionsUseCase {
@@ -6,7 +7,10 @@ export class CreateEmissionsUseCase {
     private readonly emissionsRepository: EmissionsRepository,
   ) {}
 
-  public async execute(emissions: Emission[]): Promise<void> {
-    await this.emissionsRepository.import(emissions);
+  public async execute(
+    emissions: Emission[],
+    tx?: PrismaTransaction,
+  ): Promise<void> {
+    await this.emissionsRepository.import(emissions, tx);
   }
 }

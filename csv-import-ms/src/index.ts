@@ -5,6 +5,7 @@ import { CsvImportService, RawCsvRow } from "./application/CsvImportService";
 import { CreateSectorsUseCase } from "./application/CreateSectorsUseCase";
 import { CreateEmissionsUseCase } from "./application/CreateEmissionsUseCase";
 import { CreateImportLogUseCase } from "./application/CreateImportLogUseCase";
+import { ProcessCsvImportUseCase } from "./application/ProcessCsvImportUseCase";
 import { DeleteAllUseCase } from "./application/DeleteAllUseCase";
 import { FastCsvParser } from "./infrastructure/parsers/FastCsvParser";
 import { PrismaSectorRepository } from "./infrastructure/PrismaSectorRepository";
@@ -33,12 +34,16 @@ export async function main(): Promise<void> {
   const createImportLogUseCase = new CreateImportLogUseCase(
     importLogRepository,
   );
-  const importController = new CsvImportController(
-    csvImportService,
+  const processCsvImportUseCase = new ProcessCsvImportUseCase(
+    client,
     createSectorsUseCase,
     createEmissionsUseCase,
-    getStatsUseCase,
     createImportLogUseCase,
+    getStatsUseCase,
+  );
+  const importController = new CsvImportController(
+    csvImportService,
+    processCsvImportUseCase,
   );
   const deleteAllUseCase = new DeleteAllUseCase(
     sectorRepository,

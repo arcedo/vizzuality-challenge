@@ -3,13 +3,15 @@ import { SectorStats } from "../domain/Stats";
 import { SectorRepository } from "../application/ports/SectorRepository";
 import { PrismaClient } from "@prisma/client";
 import { RepositoryError } from "../domain/errors/RepositoryError";
+import { PrismaTransaction } from "../types/prisma";
 
 export class PrismaSectorRepository implements SectorRepository {
   public constructor(private readonly client: PrismaClient) {}
 
-  public async import(data: Sector[]): Promise<void> {
+  public async import(data: Sector[], tx?: PrismaTransaction): Promise<void> {
+    const transaction = tx || this.client;
     try {
-      const result = await this.client.sector.createMany({
+      const result = await transaction.sector.createMany({
         data: data.map((sector) => ({
           id: sector.id,
           name: sector.name,
@@ -30,14 +32,15 @@ export class PrismaSectorRepository implements SectorRepository {
     }
   }
 
-  public async getImportedStats(): Promise<SectorStats> {
+  public async getImportedStats(tx?: PrismaTransaction): Promise<SectorStats> {
+    const transaction = tx || this.client;
     try {
       const [countryGroups, overallCount] = await Promise.all([
-        this.client.sector.groupBy({
+        transaction.sector.groupBy({
           by: ["country"],
           _count: { _all: true },
         }),
-        this.client.sector.aggregate({
+        transaction.sector.aggregate({
           _count: { name: true },
         }),
       ]);

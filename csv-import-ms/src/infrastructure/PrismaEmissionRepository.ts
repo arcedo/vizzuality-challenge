@@ -3,13 +3,15 @@ import { Emission } from "../domain/Emission";
 import { PrismaClient } from "@prisma/client";
 import { RepositoryError } from "../domain/errors/RepositoryError";
 import { EmissionStats } from "../domain/Stats";
+import { PrismaTransaction } from "../types/prisma";
 
 export class PrismaEmissionRepository implements EmissionsRepository {
   public constructor(private readonly client: PrismaClient) {}
 
-  public async import(data: Emission[]): Promise<void> {
+  public async import(data: Emission[], tx?: PrismaTransaction): Promise<void> {
+    const transaction = tx || this.client;
     try {
-      const result = await this.client.emission.createMany({
+      const result = await transaction.emission.createMany({
         data: data.map((emission) => ({
           idSector: emission.idSector,
           year: emission.year,
@@ -29,9 +31,12 @@ export class PrismaEmissionRepository implements EmissionsRepository {
     }
   }
 
-  public async getImportedStats(): Promise<EmissionStats> {
+  public async getImportedStats(
+    tx?: PrismaTransaction,
+  ): Promise<EmissionStats> {
+    const transaction = tx || this.client;
     try {
-      const result = await this.client.emission.aggregate({
+      const result = await transaction.emission.aggregate({
         _count: { id: true },
         _min: { value: true, year: true },
         _max: { value: true, year: true },
